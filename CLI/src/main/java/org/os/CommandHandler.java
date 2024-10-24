@@ -25,7 +25,9 @@ public class CommandHandler {
 
             case "mkdir":
                 if (tokens.length > 1) {
-                    MkdirCommand.execute(tokens[1]);
+                    String[] dirNames = new String[tokens.length - 1];
+                    System.arraycopy(tokens, 1, dirNames, 0, tokens.length - 1);
+                    MkdirCommand.execute(dirNames);
                 } else {
                     System.out.println("mkdir: missing operand");
                 }
@@ -72,6 +74,13 @@ public class CommandHandler {
                     CatCommand.execute(tokens[1]);
                 } else {
                     System.out.println("cat: missing operand");
+                }
+                break;
+            case "cd":
+                if (tokens.length > 1) {
+                    CDCommand.execute(tokens[1]);
+                } else {
+                    System.out.println("cd: missing operand");
                 }
                 break;
 

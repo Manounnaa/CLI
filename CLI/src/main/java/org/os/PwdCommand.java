@@ -9,6 +9,6 @@ public class PwdCommand {
     }
 
     public static String getCurrentDirectory() {
-        return Paths.get("").toAbsolutePath().toString();
+        return System.getProperty("user.dir");
     }
 }

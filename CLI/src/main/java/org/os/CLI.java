@@ -7,8 +7,11 @@ public class CLI {
         Scanner scanner = new Scanner(System.in);
         CommandHandler commandHandler = new CommandHandler();
 
+        String currentDir = System.getProperty("user.dir");
+
+
         while (true) {
-            System.out.print("myCLI> ");
+            System.out.print("myCLI" + currentDir.replace("\\", "/") + "> ");
             String input = scanner.nextLine().trim();
 
             if (input.equalsIgnoreCase("exit")) {
@@ -18,6 +21,8 @@ public class CLI {
 
             // Pass input to CommandHandler
             commandHandler.executeCommand(input);
+
+            currentDir = System.getProperty("user.dir");
         }
 
         scanner.close();
