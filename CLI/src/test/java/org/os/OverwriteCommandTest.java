@@ -18,7 +18,7 @@ class OverwriteCommandTest {
         try (BufferedReader reader = new BufferedReader(new FileReader(testfilename))) {
             String line = reader.readLine();
             // assert >>content matches past wrote
-            assertEquals(initialcontent, line, "The file should contain the exact text '" + initialcontent + "' after the write operation ");
+            assertEquals(initialcontent, line);
         } catch (IOException e) {
             fail("IOException occurred while reading the file: " + e.getMessage());
         }
@@ -33,7 +33,7 @@ class OverwriteCommandTest {
         try (BufferedReader reader = new BufferedReader(new FileReader(testfilename))) {
             String line = reader.readLine();
             // content updated?
-            assertEquals(newcontent, line, "File content should be updated after overwrite "); //The file content should reflect the new content after overwriting
+            assertEquals(newcontent, line); //The file content should reflect the new content after overwriting
         } catch (IOException e) {
             fail("IOException occurred while reading the file: " + e.getMessage());
         }

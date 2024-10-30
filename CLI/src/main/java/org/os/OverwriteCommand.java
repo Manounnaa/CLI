@@ -13,9 +13,9 @@ import java.io.IOException;
             //to ensure filewriter is closed automatically
             try (FileWriter writer = new FileWriter(fileName, false)) { // 'false' to overwrite file
                 writer.write(content);
-                System.out.println("OverwriteCommand: Content written to file -> " + fileName); //confirmation message
+                System.out.println( fileName); //confirmation message
             } catch (IOException e) { //catching exceptions may occur
-                System.out.println("OverwriteCommand error: Unable to write to file '" + fileName + "': " + e.getMessage());
+                System.out.println("Unable to write to file '" + fileName + "': " + e.getMessage());
             }
         }
     }

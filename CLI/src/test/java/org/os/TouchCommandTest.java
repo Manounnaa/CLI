@@ -11,14 +11,14 @@ class TouchCommandTest {
     @Test
     void testCreation() {// execute to create new one>>testCreateNewFile
         TouchCommand.execute(testfilename);
-        assertTrue(new File(testfilename).exists(), "File should be created successfully !"); // assert >>file now exists
+        assertTrue(new File(testfilename).exists()); // assert >>file now exists
     }
     @Test
     void testDuplicateCreation() {//testCreateDuplicateFile
         TouchCommand.execute(testfilename);// xreating file for 1st time
         TouchCommand.execute(testfilename);// trying to create same file again
         // assert >> file still exists after the duplicate creation attempt
-        assertTrue(new File(testfilename).exists(), "File should still exist after duplicate creation try ");
+        assertTrue(new File(testfilename).exists());
     }
     @Test
     void testValidation() { // trying to create file with invalid name>>testCreateFileWithInvalidName

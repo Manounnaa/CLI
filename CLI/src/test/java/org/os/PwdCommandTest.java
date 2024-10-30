@@ -6,7 +6,7 @@ class PwdCommandTest{
     @Test
     void testGetCurrentDirectory() {// get current dir by PwdCommand fun
         String currentDir = PwdCommand.getCurrentDirectory();// assert>>returned dir matches expected property for user dir
-        assertEquals(System.getProperty("user.dir"), currentDir, "Current directory should match system property");
+        assertEquals(System.getProperty("user.dir"), currentDir);
         //"The current working directory should align with the system's user directory path
     }
 }

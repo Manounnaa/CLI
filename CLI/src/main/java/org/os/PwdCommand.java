@@ -7,7 +7,7 @@ public class PwdCommand {
      */
     public static void execute() {
         // printing current dir by getcurrentdirfun
-        System.out.println("PwdCommand: Current directory -> " + getCurrentDirectory());
+        System.out.println( getCurrentDirectory());
     }
     /**
      * gets current working dir

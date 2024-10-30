@@ -58,7 +58,7 @@ public class LsCommand {
 
         if (!directory.exists() || !directory.isDirectory()) {
             System.out.println("Error: '" + dir + "' is not a valid directory.");
-            return;
+            return ;
         }
 
         for (File file : directory.listFiles()) {
@@ -68,7 +68,7 @@ public class LsCommand {
         }
 
         Collections.sort(fileNames, Collections.reverseOrder());
-        fileNames.forEach(fileName -> System.out.println("File: " + fileName));
+        fileNames.forEach(fileName -> System.out.println(fileName));
     }
     public static void lsShowAll(String dir, String pattern) {
         // Todo
