@@ -25,20 +25,20 @@ public class PipeHandler {
     }
 
     public static void handlePipe(String input) {
-        String[] pipeParts = input.split("|");
+        String[] pipeParts = input.split("\\|");
         int i = 0;
-        String output;
+        String output = "", in = "";
         for(String pipePart : pipeParts){
             if(!COMMAND_TYPES.containsKey(pipePart)){
                 System.out.println("Unknown command: " + pipePart);
                 return;
             }
-            if(COMMAND_TYPES.get(pipePart) == "input" && i == 0 || COMMAND_TYPES.get(pipePart) == "input/output" && i == 0){
+            if(COMMAND_TYPES.get(pipePart).equals("input") && i == 0 || COMMAND_TYPES.get(pipePart).equals("input/output") && i == 0){
                 System.out.println("There is no input");
                 return;
             }
             String[] command = pipePart.split(" ");
-            if(command[0] == "ls"){
+            if(command[0].equals("ls")){
                 if(i == pipeParts.length - 1){
                     LsCommand.execute(command);
                 }
@@ -53,6 +53,7 @@ public class PipeHandler {
                 }
                 else{
                     output = captureOutput(() -> org.os.CatCommand.execute(command[1]));
+                    in = captureOutput(() -> org.os.CatCommand.execute(command[1]));
                 }
             }
             else if(command[0] == "sort"){
@@ -60,7 +61,9 @@ public class PipeHandler {
                     LsCommand.execute(command);
                 }
                 else{
-                    output = captureOutput(() -> LsCommand.execute(command));
+                    String finalIn = in;
+                    output = captureOutput(() -> SortNameCommand.execute(finalIn));
+                    in = captureOutput(() -> SortNameCommand.execute(finalIn));
                 }
             }
             i++;
