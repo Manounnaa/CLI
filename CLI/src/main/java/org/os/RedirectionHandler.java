@@ -12,7 +12,7 @@ public class RedirectionHandler {
             String[] parts = input.split(">", 2);
             String content = parts[0].trim();
             String fileName = parts[1].trim();
-            //OverwriteCommand.execute(fileName, content);
+            OverwriteCommand.execute(fileName, content);
         }
     }
 }
