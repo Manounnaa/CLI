@@ -10,10 +10,6 @@ public class CommandHandler {
         }
 
         // Check for redirection
-        if (input.contains(">") || input.contains(">>")) {
-            RedirectionHandler.handleRedirection(input);
-            return;  // Exit early to avoid further processing
-        }
 
         String[] tokens = input.split("\\s+");
         String command = tokens[0];
@@ -55,7 +51,7 @@ public class CommandHandler {
 
             case "mv":
                 if (tokens.length > 2) {
-                    MvCommand.execute(tokens[1], tokens[2]);
+                    MvCommand.execute(tokens);
                 } else {
                     System.out.println("mv: missing operand");
                 }
@@ -63,7 +59,7 @@ public class CommandHandler {
 
             case "rm":
                 if (tokens.length > 1) {
-                    RmCommand.execute(tokens[1]);
+                    RmCommand.execute(tokens);
                 } else {
                     System.out.println("rm: missing operand");
                 }
@@ -79,7 +75,7 @@ public class CommandHandler {
 
             case "cat":
                 if (tokens.length > 1) {
-                    CatCommand.execute(tokens[1]);
+                    CatCommand.execute(tokens);
                 } else {
                     System.out.println("cat: missing operand");
                 }
@@ -91,9 +87,13 @@ public class CommandHandler {
                     System.out.println("cd: missing operand");
                 }
                 break;
-
+            case "help":
+                HelpCommand.execute();
             default:
                 System.out.println("Unknown command: " + command);
+        }
+        if (input.contains(">") || input.contains(">>")) {
+            RedirectionHandler.handleRedirection(input);
         }
     }
 }
