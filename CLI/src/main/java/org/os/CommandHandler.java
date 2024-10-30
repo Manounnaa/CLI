@@ -45,13 +45,13 @@ public class CommandHandler {
                 LsCommand.execute(tokens);
                 break;
 
-            case "ls -r":
+           /* case "ls -r":
                 if (tokens.length > 1) {
                     LsRCommand.execute(tokens[1]); // execute LsRCommand for reverse listing
                 } else {
                     System.out.println("ls -r: missing operand");
                 }
-                break;
+                break;*/
 
             case "mv":
                 if (tokens.length > 2) {

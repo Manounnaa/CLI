@@ -1,6 +1,5 @@
-package test.java.org.os;
+package org.os;
 
-import main.java.org.os.LsCommand;
 import org.junit.jupiter.api.Test;
 
 public class LSCommandTest {
