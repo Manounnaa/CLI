@@ -8,13 +8,33 @@ public class CommandHandler {
             PipeHandler.handlePipe(input);
             return;  // Exit early to avoid further processing
         }
+        // Check for redirection
+        boolean appendRedirect = false;
+        boolean overwriteRedirect = false;
+        String targetFile = null;
 
+        // Check for redirection using >> or >
+        if (input.contains(">>")) {
+            String[] parts = input.split(">>");
+            input = parts[0].trim(); // command part
+            targetFile = parts[1].trim();
+            appendRedirect = true;
+        } else if (input.contains(">")) {
+            String[] parts = input.split(">");
+            input = parts[0].trim();
+            targetFile = parts[1].trim();
+            overwriteRedirect = true;
+        }
         // Check for redirection
 
         String[] tokens = input.split("\\s+");
         String command = tokens[0];
 
         switch (command) {
+            case "echo":
+                EchoCommand.execute(tokens);
+                break;
+
             case "pwd":
                 PwdCommand.execute();
                 break;
@@ -36,19 +56,16 @@ public class CommandHandler {
                     System.out.println("rmdir: missing operand");
                 }
                 break;
-
-            case "ls":
-                LsCommand.execute(tokens);
-                break;
-
-           /* case "ls -r":
-                if (tokens.length > 1) {
-                    LsRCommand.execute(tokens[1]); // execute LsRCommand for reverse listing
-                } else {
-                    System.out.println("ls -r: missing operand");
-                }
-                break;*/
-
+                case "ls":
+                    String output = LsCommand.execute(tokens);
+                    if (appendRedirect) {
+                        AppendCommand.execute(targetFile, output);
+                    } else if (overwriteRedirect) {
+                        OverwriteCommand.execute(targetFile, output);
+                    } else {
+                        System.out.println(output);
+                    }
+                    break;
             case "mv":
                 if (tokens.length > 2) {
                     MvCommand.execute(tokens);
@@ -74,26 +91,28 @@ public class CommandHandler {
                 break;
 
             case "cat":
-                if (tokens.length > 1) {
-                    CatCommand.execute(tokens);
+                 output = CatCommand.execute(tokens);
+                // Handle redirection
+                if (appendRedirect) {
+                    AppendCommand.execute(targetFile, output);
+                } else if (overwriteRedirect) {
+                    OverwriteCommand.execute(targetFile, output);
                 } else {
-                    System.out.println("cat: missing operand");
+                    System.out.print(output);
                 }
                 break;
             case "cd":
                 if (tokens.length > 1) {
                     CDCommand.execute(tokens[1]);
-                } else {
-                    System.out.println("cd: missing operand");
+                } else if (tokens[0].length()==1&&tokens[0].equals("cd")) {
+                    CDCommand.execute("");
+
                 }
                 break;
             case "help":
                 HelpCommand.execute();
             default:
                 System.out.println("Unknown command: " + command);
-        }
-        if (input.contains(">") || input.contains(">>")) {
-            RedirectionHandler.handleRedirection(input);
         }
     }
 }

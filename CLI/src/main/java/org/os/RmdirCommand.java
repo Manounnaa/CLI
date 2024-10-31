@@ -5,8 +5,9 @@ import java.io.File;
 public class RmdirCommand {
 
     public static void execute(String dirName) {
-        File dir = new File(dirName);
-        if (dir.exists() && dir.isDirectory()) {
+        String currentDir = DirectoryUtil.getCurrentDirectory();
+        File dir = new File(currentDir, dirName);
+          if (dir.exists() && dir.isDirectory()) {
             if (dir.list().length == 0) {
                 dir.delete();
             } else {

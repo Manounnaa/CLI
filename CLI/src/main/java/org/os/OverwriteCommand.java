@@ -10,12 +10,22 @@ import java.io.IOException;
          * @param content to write into file
          */
         public static void execute(String fileName, String content) {
-            //to ensure filewriter is closed automatically
-            try (FileWriter writer = new FileWriter(fileName, false)) { // 'false' to overwrite file
+            String currentDir = DirectoryUtil.getCurrentDirectory(); // Get the current directory
+            FileWriter writer = null;
+
+            try {
+                writer = new FileWriter(currentDir + "/" + fileName, false);
                 writer.write(content);
-                System.out.println( fileName); //confirmation message
-            } catch (IOException e) { //catching exceptions may occur
+            } catch (IOException e) {
                 System.out.println("Unable to write to file '" + fileName + "': " + e.getMessage());
+            } finally {
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                        System.out.println(">>: error closing file writer: " + e.getMessage());
+                    }
+                }
             }
         }
     }

@@ -35,7 +35,7 @@ public class RmCommandTest {
         File tempFile = new File("testFile.txt");
         try {
             if (tempFile.createNewFile()) {
-                RmCommand.execute("testFile.txt");
+                RmCommand.execute(new String[]{"testFile.txt"});
                 assertEquals("File 'testFile.txt' deleted".trim(), outputStream.toString().trim());
             }
         } catch (Exception e) {
@@ -49,7 +49,7 @@ public class RmCommandTest {
 
     @Test
     public void testDeleteNonexistentFile() {
-        RmCommand.execute("FileNotFound.txt");
+        RmCommand.execute(new String[]{"FileNotFound.txt"});
         assertEquals("rm: cannot remove 'FileNotFound.txt': No such file or directory".trim(), outputStream.toString().trim());
     }
 
@@ -59,7 +59,7 @@ public class RmCommandTest {
         File tempDir = new File("testDir");
         try {
             if (tempDir.mkdir()) {
-                RmCommand.execute("testDir");
+                RmCommand.execute(new String[]{"testDir"});
                 assertEquals("rm: cannot remove 'testDir': Is a directory".trim(), outputStream.toString().trim());
             }
         } catch (Exception e) {

@@ -10,12 +10,14 @@ import java.util.regex.Pattern;
 
 public class LsCommand {
     private static String currentDirectory = "."; // Track current directory
-    public static void execute(String[] tokens) {
+    public static String execute(String[] tokens) {
         boolean reverseOrder = tokens.length > 1 && "-r".equals(tokens[1]);
         boolean showAll = tokens.length > 1 && "-a".equals(tokens[1]);
-        String directory = currentDirectory; // Default to the current directory
+        String directory = DirectoryUtil.getCurrentDirectory(); // Use DirectoryUtil for current directory
 
         String pattern = "*";
+        StringBuilder output = new StringBuilder(); // Use StringBuilder to capture output
+
 
         if (tokens.length > 1 && !reverseOrder && !showAll) {
             pattern = tokens[1].contains("*") ? tokens[1] : "*";
@@ -26,43 +28,43 @@ public class LsCommand {
         }
 
         if (reverseOrder) {
-            lsDirectoryReverse(directory, pattern);
+            output.append(lsDirectoryReverse(directory, pattern));
         } else if (showAll) {
-            lsShowAll(directory, pattern);
+            output.append(lsShowAll(directory, pattern));
         } else {
-            lsDirectory(directory, pattern);
+            output.append(lsDirectory(directory, pattern));
         }
+        return output.toString().trim();
+
     }
 
     // Method to change the current directory
-    public static String getCurrentDirectory() {
-        return currentDirectory;
-    }
 
-    public static void setCurrentDirectory(String dir) {
-        currentDirectory = dir;
-    }
 
-    public static void lsDirectory(String dir, String pattern) {
+    public static Object lsDirectory(String dir, String pattern) {
+        StringBuilder output = new StringBuilder();
+
         Path path = Paths.get(dir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, pattern)) {
             for (Path entry : stream) {
                 if (!Files.isHidden(entry)) { // Exclude hidden files
-                    System.out.println(entry.getFileName());
+                    output.append(entry.getFileName()).append(System.lineSeparator());
                 }
             }
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            output.append("Error: ").append(e.getMessage());
         }
+        return output.toString();
     }
 
-    public static void lsDirectoryReverse(String dir, String pattern) {
+    public static Object lsDirectoryReverse(String dir, String pattern) {
+        StringBuilder output = new StringBuilder();
         File directory = new File(dir);
         List<String> fileNames = new ArrayList<>();
 
         if (!directory.exists() || !directory.isDirectory()) {
             System.out.println("Error: '" + dir + "' is not a valid directory.");
-            return;
+            return output.toString();
         }
 
         Pattern regexPattern = Pattern.compile(pattern.replace("*", ".*"));
@@ -74,18 +76,23 @@ public class LsCommand {
         }
 
         Collections.sort(fileNames, Collections.reverseOrder());
-        fileNames.forEach(System.out::println);
+        fileNames.forEach(name -> output.append(name).append(System.lineSeparator()));
+
+        return output.toString();
     }
 
-    public static void lsShowAll(String dir, String pattern) {
+    public static Object lsShowAll(String dir, String pattern) {
+        StringBuilder output = new StringBuilder();
+
         Path path = Paths.get(dir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, pattern)) {
             for (Path entry : stream) {
-                System.out.println(entry.getFileName()); // Show all files, including hidden
+                output.append(entry.getFileName()).append(System.lineSeparator()); // Show all files, including hidden
             }
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            output.append("Error: ").append(e.getMessage());
         }
+        return output.toString();
     }
 }
 //list of things to handle

@@ -8,8 +8,10 @@ import java.nio.file.Paths;
 public class MkdirCommand {
 
     public static void execute(String... dirNames) {
+        String currentDir = DirectoryUtil.getCurrentDirectory();
+
         for (String dirName : dirNames) {
-            Path path = Paths.get(dirName);
+            Path path = Paths.get(currentDir, dirName);
             File file = path.toFile();
 
             if (file.exists()) {

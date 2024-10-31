@@ -14,6 +14,6 @@ public class PwdCommand {
      * @return current directory as string
      */
     public static String getCurrentDirectory() {
-        return System.getProperty("user.dir");
+        return  DirectoryUtil.getCurrentDirectory();
     }
 }

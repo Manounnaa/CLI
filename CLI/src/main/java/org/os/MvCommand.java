@@ -19,6 +19,9 @@ public class MvCommand {
 
         Path destination = Paths.get(target);
 
+        String currentDir = DirectoryUtil.getCurrentDirectory(); // Get the current directory
+
+
 //        List<Path> expandedSources = new ArrayList<>(); //
 
         try{
@@ -28,13 +31,13 @@ public class MvCommand {
                     return;
                 }
                 for (String source : sources) {
-                    Path src = Paths.get(source);
+                    Path src = Paths.get(currentDir, source);
                     Path dest = destination.resolve(src.getFileName());
                     Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
             else{
-                Path src = Paths.get(sources[0]);
+                Path src = Paths.get(currentDir, sources[0]);
 //                if destination is a directory then we are moving
                 if(Files.isDirectory(destination)){
                     Path dest = destination.resolve(src.getFileName());
