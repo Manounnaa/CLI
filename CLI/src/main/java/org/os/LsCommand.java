@@ -9,101 +9,105 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class LsCommand {
-    // Track current directory
-//    private static String currentDirectory = "."; // Track current directory
-//    String currentDir = DirectoryUtil.getCurrentDirectory(); // Get the current directory
+    private static final String CURRENT_DIR = ".";
+
     public static String execute(String[] tokens) {
-        String currentDirectory = DirectoryUtil.getCurrentDirectory();
+        if (tokens == null || tokens.length == 0) {
+            return "Error: Invalid command";
+        }
+
         boolean reverseOrder = tokens.length > 1 && "-r".equals(tokens[1]);
         boolean showAll = tokens.length > 1 && "-a".equals(tokens[1]);
-        String directory = currentDirectory; // Use DirectoryUtil for current directory
-
-        Path resolvedPath = Paths.get(currentDirectory).normalize();
+        String directory = DirectoryUtil.getCurrentDirectory();
         String pattern = "*";
-        StringBuilder output = new StringBuilder(); // Use StringBuilder to capture output
 
-
+        // Parse directory and pattern from arguments
         if (tokens.length > 1 && !reverseOrder && !showAll) {
-            pattern = tokens[1].contains("*") ? tokens[1] : "*";
-            directory = tokens[1].contains("*") ? currentDirectory : tokens[1];
-        } else if (tokens.length > 2) {
-            pattern = tokens[2].contains("*") ? tokens[2] : "*";
-            directory = tokens[2].contains("*") ? currentDirectory : tokens[2];
+            if (tokens[1].contains("*")) {
+                pattern = tokens[1];
+            } else {
+                directory = tokens[1];
+            }
         }
 
-        if (reverseOrder) {
-            output.append(lsDirectoryReverse(directory, pattern));
-        } else if (showAll) {
-            output.append(lsShowAll(resolvedPath.toString(), pattern));
-        } else {
-            output.append(lsDirectory(resolvedPath.toString(), pattern));
+        if (tokens.length > 2) {
+            if (tokens[2].contains("*")) {
+                pattern = tokens[2];
+            } else {
+                directory = tokens[2];
+            }
         }
-        return output.toString().trim();
 
+        try {
+            if (reverseOrder) {
+                return lsDirectoryReverse(directory, pattern);
+            } else if (showAll) {
+                return lsShowAll(directory, pattern);
+            } else {
+                return lsDirectory(directory, pattern);
+            }
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
     }
 
-    // Method to change the current directory
-
-
-    public static Object lsDirectory(String dir, String pattern) {
+    public static String lsDirectory(String dir, String pattern) {
         StringBuilder output = new StringBuilder();
+        Path path = Paths.get(dir).normalize();
 
-        Path path = Paths.get(dir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, pattern)) {
             for (Path entry : stream) {
-                if (!Files.isHidden(entry)) { // Exclude hidden files
+                if (!Files.isHidden(entry)) {
                     output.append(entry.getFileName()).append(System.lineSeparator());
                 }
             }
         } catch (IOException e) {
-            output.append("Error: ").append(e.getMessage());
+            return "Error: " + e.getMessage();
         }
         return output.toString();
     }
 
-    public static Object lsDirectoryReverse(String dir, String pattern) {
+    public static String lsDirectoryReverse(String dir, String pattern) {
         StringBuilder output = new StringBuilder();
         File directory = new File(dir);
         List<String> fileNames = new ArrayList<>();
 
         if (!directory.exists() || !directory.isDirectory()) {
-            System.out.println("Error: '" + dir + "' is not a valid directory.");
-            return output.toString();
+            return "Error: '" + dir + "' is not a valid directory.";
         }
 
         Pattern regexPattern = Pattern.compile(pattern.replace("*", ".*"));
+        File[] files = directory.listFiles();
 
-        for (File file : directory.listFiles()) {
+        if (files == null) {
+            return "Error: Unable to list directory contents";
+        }
+
+        for (File file : files) {
             if (!file.isHidden() && regexPattern.matcher(file.getName()).matches()) {
                 fileNames.add(file.getName());
             }
         }
 
         Collections.sort(fileNames, Collections.reverseOrder());
-        fileNames.forEach(name -> output.append(name).append(System.lineSeparator()));
+        for (String name : fileNames) {
+            output.append(name).append(System.lineSeparator());
+        }
 
         return output.toString();
     }
 
-    public static Object lsShowAll(String dir, String pattern) {
+    public static String lsShowAll(String dir, String pattern) {
         StringBuilder output = new StringBuilder();
+        Path path = Paths.get(dir).normalize();
 
-        Path path = Paths.get(dir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, pattern)) {
             for (Path entry : stream) {
-                output.append(entry.getFileName()).append(System.lineSeparator()); // Show all files, including hidden
+                output.append(entry.getFileName()).append(System.lineSeparator());
             }
         } catch (IOException e) {
-            output.append("Error: ").append(e.getMessage());
+            return "Error: " + e.getMessage();
         }
         return output.toString();
     }
 }
-//list of things to handle
-//ls
-//ls path
-//ls path1 path2 path3....
-//ls filename
-//ls ../  ...relative path
-//ls *extension  ....wild card
-//ls path/*extension
