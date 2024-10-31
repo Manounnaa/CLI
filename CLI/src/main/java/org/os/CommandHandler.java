@@ -32,9 +32,22 @@ public class CommandHandler {
 
         switch (command) {
             case "echo":
-                EchoCommand.execute(tokens);
-                break;
+                String output = EchoCommand.execute(tokens);
 
+                if (targetFile == null) {
+                    System.out.println(output); // No redirection, print to console
+                } else {
+                    try {
+                        if (appendRedirect) {
+                            AppendCommand.execute(targetFile, output);
+                        } else if (overwriteRedirect) {
+                            OverwriteCommand.execute(targetFile, output);
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Error writing to file '" + targetFile + "': " + e.getMessage());
+                    }
+                }
+                break;
             case "pwd":
                 PwdCommand.execute();
                 break;
@@ -57,7 +70,7 @@ public class CommandHandler {
                 }
                 break;
                 case "ls":
-                    String output = LsCommand.execute(tokens);
+                     output = LsCommand.execute(tokens);
                     if (appendRedirect) {
                         AppendCommand.execute(targetFile, output);
                     } else if (overwriteRedirect) {
