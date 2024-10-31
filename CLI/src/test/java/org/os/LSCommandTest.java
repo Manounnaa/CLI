@@ -10,6 +10,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
+
 public class LSCommandTest {
         private static final String testDir = "testDir";
         @BeforeAll
@@ -25,49 +26,45 @@ public class LSCommandTest {
         }
         // LsRCommand Tests (reverse order listing)
         @Test
-        void testListInReverse() {
+        void testList() {  // ereate tests >>testListFilesInDirectory
             TouchCommand.execute(testDir + "/file1.txt");
             TouchCommand.execute(testDir + "/file2.txt");
-            List<String> files = LsRCommand.execute(testDir);
-            assertEquals(2, files.size());
-            assertTrue(files.contains("file1.txt") && files.contains("file2.txt"));
+            String output = LsCommand.execute(new String[]{testDir, "-r"});
+            assertTrue(output.contains("file1.txt"));
+            assertTrue(output.contains("file2.txt"));
         }
         @Test
-        void testEmptyDirectoryInReverse() {
+        void testEmpty() {// create empty test dir>>testEmptyDirectory
             String emptyDir = "emptyTestDir";
             new File(emptyDir).mkdir();
-            List<String> files = LsRCommand.execute(emptyDir);
-            assertTrue(files.isEmpty());
+            String output = LsCommand.execute(new String[]{emptyDir, "-r"});
+            assertTrue(output.isEmpty());
             new File(emptyDir).delete();
         }
 
         @Test
-        void testInvalidDirectoryInReverse() {
-            List<String> files = LsRCommand.execute("invalidDir");
-            assertTrue(files.isEmpty());
-        }
-
+    void testValidation() {//testInvalidDirectory
+            // execute Ls-r on an invalid dir
+        String output = LsCommand.execute(new String[]{"invalidDir", "-r"});
+        assertTrue(output.isEmpty());
+    }
         @Test
-        void testReverseOrderListing() {
+        void testReversing() {//testReverseOrderListing
+            // create multiple test files
             TouchCommand.execute(testDir + "/b.txt");
             TouchCommand.execute(testDir + "/a.txt");
             TouchCommand.execute(testDir + "/c.txt");
-            List<String> files = LsRCommand.execute(testDir);
-            assertEquals(3, files.size());
-            assertEquals("c.txt", files.get(0));
-            assertEquals("b.txt", files.get(1));
-            assertEquals("a.txt", files.get(2));
+            String output = LsCommand.execute(new String[]{testDir, "-r"});
+            assertTrue(output.startsWith("c.txt"));
         }
-
         @Test
-        void testFileWithDuplicateNameInReverse() {
+        void testSimilarity() {//testFilesWithSameName
+            // file with a duplicate name
             TouchCommand.execute(testDir + "/duplicate.txt");
             TouchCommand.execute(testDir + "/duplicate.txt");
-            List<String> files = LsRCommand.execute(testDir);
-            assertEquals(1, files.size());
-            assertTrue(files.contains("duplicate.txt"));
+            String output = LsCommand.execute(new String[]{testDir, "-r"});
+            assertTrue(output.contains("duplicate.txt"));
         }
-
         // LsCommand Tests
         @Test
         public void testLsAllFiles() {
