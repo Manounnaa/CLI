@@ -24,6 +24,7 @@ public class RmCommand {
             } else if (file.isDirectory()) {
                 System.out.println("rm: cannot remove '" + fileName + "': Is a directory");
             } else if (file.delete()) {
+                System.out.println("File '" + fileName + "' deleted");
                 return;
             } else {
                 System.out.println("rm: failed to delete '" + fileName + "'");

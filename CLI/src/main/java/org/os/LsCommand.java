@@ -9,12 +9,16 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class LsCommand {
-    private static String currentDirectory = "."; // Track current directory
+ // Track current directory
+//    private static String currentDirectory = "."; // Track current directory
+//    String currentDir = DirectoryUtil.getCurrentDirectory(); // Get the current directory
     public static String execute(String[] tokens) {
+        String currentDirectory = DirectoryUtil.getCurrentDirectory();
         boolean reverseOrder = tokens.length > 1 && "-r".equals(tokens[1]);
         boolean showAll = tokens.length > 1 && "-a".equals(tokens[1]);
-        String directory = DirectoryUtil.getCurrentDirectory(); // Use DirectoryUtil for current directory
+        String directory = currentDirectory; // Use DirectoryUtil for current directory
 
+        Path resolvedPath = Paths.get(currentDirectory).normalize();
         String pattern = "*";
         StringBuilder output = new StringBuilder(); // Use StringBuilder to capture output
 
@@ -30,9 +34,9 @@ public class LsCommand {
         if (reverseOrder) {
             output.append(lsDirectoryReverse(directory, pattern));
         } else if (showAll) {
-            output.append(lsShowAll(directory, pattern));
+            output.append(lsShowAll(resolvedPath.toString(), pattern));
         } else {
-            output.append(lsDirectory(directory, pattern));
+            output.append(lsDirectory(resolvedPath.toString(), pattern));
         }
         return output.toString().trim();
 

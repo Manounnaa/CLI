@@ -7,12 +7,12 @@ public class HelpCommand {
                 "mkdir <directory> - Create a new directory\n" +
                 "cd <directory> - Change directory\n" +
                 "mv <source> <destination> - Move or rename files\n" +
-                "pwd - Print working directory\n" +
+                "pwd - Prints working directory\n" +
                 "rmdir <directory> - Remove a directory\n" +
                 "rm <file> - Delete a file\n" +
                 "ls - List directory contents\n" +
                 "ls -a - List all contents in the directory, including hidden files\n" +
-                "ls -r - List directory contents recursively\n" +
+                "ls -r - List directory contents reversely\n" +
                 "> - Redirect output to a file\n" +
                 ">> - Append output to a file\n" +
                 "touch <file> - Create a new file or update the timestamp of an existing file\n" +
