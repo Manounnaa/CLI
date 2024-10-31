@@ -4,81 +4,98 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
-import org.os.CatCommand;
 
 public class PipeHandler {
     private static final Map<String, String> COMMAND_TYPES = new HashMap<>();
     static {
         COMMAND_TYPES.put("ls", "output");
         COMMAND_TYPES.put("cat", "output");
-//        COMMAND_TYPES.put("grep", "input");
         COMMAND_TYPES.put("sort", "input/output");
-//        COMMAND_TYPES.put("echo", "output");
-        // Add other commands and their types as needed
     }
-    public static String[] captureOutput(Runnable command){
-        PrintStream out = System.out; //stores the system output
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(); //redirecting the system output
-        System.setOut(new PrintStream(outputStream));
-        command.run();
-        System.setOut(out);
-        String output = outputStream.toString();
-        return output.split("\\R");
+
+    public static String[] captureOutput(CommandExecutor command) {
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream newOut = new PrintStream(outputStream);
+        System.setOut(newOut);
+        String result = command.execute();
+        System.setOut(originalOut);
+        return result != null ? result.split("\\R") : new String[0];
+    }
+
+    @FunctionalInterface
+    interface CommandExecutor {
+        String execute();
     }
 
     public static void handlePipe(String input) {
-        String[] pipeParts = input.split("\\|");
-        int i = 0;
-        String[] output = new String[0], in = new String[0];
-        for(String pipePart : pipeParts){
-            if(!COMMAND_TYPES.containsKey(pipePart)){
-                System.out.println("Unknown command: " + pipePart);
-                return;
-            }
-            if(COMMAND_TYPES.get(pipePart).equals("input") && i == 0 || COMMAND_TYPES.get(pipePart).equals("input/output") && i == 0){
-                System.out.println("There is no input");
-                return;
-            }
-            String[] command = pipePart.split(" ");
-            if(command[0].equals("ls")){
-                if(i == pipeParts.length - 1){
-                    //if its the last command we dont need to capture its output
-                    LsCommand.execute(command);
-                }
-                else{
-                    output = captureOutput(() -> LsCommand.execute(command));
-                }
-            }
-            else if(command[0].equals("cat")){
-//                org.os.CatCommand.execute(command[1]);
-                if(i == pipeParts.length - 1){
-                    //if last command, no need to store output
-                    CatCommand.execute(command);
-                }
-                else{
-                    //if not the last command, we will store the output
-                    if(i>0){
-                        output = captureOutput(() -> CatCommand.execute(command));
-                    }
-                    else{
-                        output = captureOutput(() -> CatCommand.execute(command));
-                    }
-//                    in = captureOutput(() -> CatCommand.execute(command));
-                }
-            }
-            else if(command[0].equals("sort")){
-                if(i == pipeParts.length - 1){
-                    SortNameCommand.execute(output);
+        if (input == null || input.trim().isEmpty()) {
+            System.out.println("Empty command");
+            return;
+        }
 
-                }
-                else{
-//                    String finalIn = in;
-                    String[] finalOutput = output;
-                    output = captureOutput(() -> SortNameCommand.execute(finalOutput));
-//                    in = captureOutput(() -> SortNameCommand.execute(finalIn));
-                }
+        String[] pipeParts = input.split("\\|");
+        String[] currentOutput = new String[0];
+
+        for (int i = 0; i < pipeParts.length; i++) {
+            String[] commandParts = pipeParts[i].trim().split("\\s+");
+            String command = commandParts[0];
+
+            if (!COMMAND_TYPES.containsKey(command)) {
+                System.out.println("Unknown command: " + command);
+                return;
             }
-            i++;
+
+            boolean isLastCommand = i == pipeParts.length - 1;
+
+            try {
+                switch (command) {
+                    case "ls":
+                        if (isLastCommand) {
+                            String result = LsCommand.execute(commandParts);
+                            System.out.println(result);
+                        } else {
+                            currentOutput = captureOutput(() -> LsCommand.execute(commandParts));
+                        }
+                        break;
+
+                    case "cat":
+                        if (isLastCommand) {
+                            String result = CatCommand.execute(commandParts);
+                            System.out.println(result);
+                        } else {
+                            currentOutput = captureOutput(() -> CatCommand.execute(commandParts));
+                        }
+                        break;
+
+                    case "sort":
+                        if (currentOutput.length == 0 && i == 0) {
+                            String result = SortNameCommand.execute(commandParts);
+                            System.out.println(result);
+                        } else if (isLastCommand) {
+                            // Extract sort arguments (skip the 'sort' command itself)
+                            String[] sortArgs = new String[commandParts.length - 1];
+                            System.arraycopy(commandParts, 1, sortArgs, 0, commandParts.length - 1);
+
+                            String[] sortedOutput = SortNameCommand.execute(currentOutput, sortArgs);
+                            for (String line : sortedOutput) {
+                                System.out.println(line);
+                            }
+                        } else {
+                            String[] sortArgs = new String[commandParts.length - 1];
+                            System.arraycopy(commandParts, 1, sortArgs, 0, commandParts.length - 1);
+                            currentOutput = SortNameCommand.execute(currentOutput, sortArgs);
+                        }
+                        break;
+
+                    default:
+                        System.out.println("Unsupported command: " + command);
+                        return;
+                }
+            } catch (Exception e) {
+                System.err.println("Error executing command '" + command + "': " + e.getMessage());
+                return;
+            }
         }
     }
 }
