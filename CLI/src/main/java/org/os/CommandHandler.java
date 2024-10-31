@@ -124,6 +124,7 @@ public class CommandHandler {
                 break;
             case "help":
                 HelpCommand.execute();
+                break;
             default:
                 System.out.println("Unknown command: " + command);
         }
