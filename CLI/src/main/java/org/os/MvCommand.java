@@ -8,12 +8,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 
 public class MvCommand {
-    public static void execute(String[] args) {
+    public static String execute(String[] args) {
         if (args.length < 3) {
-            System.err.println("Usage: mv <source(s)> <destination>");
-            return;
+            return "Error: Usage: mv <source(s)> <destination>";
         }
 
+        StringBuilder result = new StringBuilder();
         String[] sources = Arrays.copyOfRange(args, 1, args.length - 1);
         String target = args[args.length - 1];
 
@@ -24,14 +24,13 @@ public class MvCommand {
             if (sources.length > 1) {
                 // Multiple source files - destination must be a directory
                 if (!Files.isDirectory(destination)) {
-                    System.err.println("Target must be a directory when moving multiple files");
-                    return;
+                    return "Error: Target must be a directory when moving multiple files";
                 }
 
                 for (String source : sources) {
                     Path sourcePath = Paths.get(source).toAbsolutePath();
                     if (!Files.exists(sourcePath)) {
-                        System.err.println("Source file not found: " + source);
+                        result.append("Error: Source file not found: ").append(source).append("\n");
                         continue;
                     }
                     Path targetPath = destination.resolve(sourcePath.getFileName());
@@ -41,8 +40,7 @@ public class MvCommand {
                 // Single source file
                 Path sourcePath = Paths.get(sources[0]).toAbsolutePath();
                 if (!Files.exists(sourcePath)) {
-                    System.err.println("Source file not found: " + sources[0]);
-                    return;
+                    return "Error: Source file not found: " + sources[0];
                 }
 
                 if (Files.isDirectory(destination)) {
@@ -55,7 +53,9 @@ public class MvCommand {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage());
+            return "Error: " + e.getMessage();
         }
+
+        return result.length() > 0 ? result.toString().trim() : "";
     }
 }
