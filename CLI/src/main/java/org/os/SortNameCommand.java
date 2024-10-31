@@ -1,13 +1,18 @@
-package main.java.org.os;
+package org.os;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class SortNameCommand {
 
-    public static void execute(String input) {
-        List<String> lines = Arrays.asList(input.split(System.lineSeparator())); //convert input to lines
+    public static String[] execute(String[] input) {
+        // Convert the array to a list
+        List<String> lines = Arrays.asList(input);
+
+        // Sort the lines case-insensitively
         lines.sort(String::compareToIgnoreCase);
-        lines.forEach(System.out::println);
+
+        // Print each sorted line
+        return lines.toArray(new String[lines.size()]);
     }
 }

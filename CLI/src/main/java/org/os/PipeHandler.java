@@ -1,9 +1,10 @@
-package main.java.org.os;
+package org.os;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
+import org.os.CatCommand;
 
 public class PipeHandler {
     private static final Map<String, String> COMMAND_TYPES = new HashMap<>();
@@ -15,19 +16,20 @@ public class PipeHandler {
 //        COMMAND_TYPES.put("echo", "output");
         // Add other commands and their types as needed
     }
-    public static String captureOutput(Runnable command){
+    public static String[] captureOutput(Runnable command){
         PrintStream out = System.out; //stores the system output
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(); //redirecting the system output
         System.setOut(new PrintStream(outputStream));
         command.run();
         System.setOut(out);
-        return outputStream.toString();
+        String output = outputStream.toString();
+        return output.split("\\R");
     }
 
     public static void handlePipe(String input) {
         String[] pipeParts = input.split("\\|");
         int i = 0;
-        String output = "", in = "";
+        String[] output = new String[0], in = new String[0];
         for(String pipePart : pipeParts){
             if(!COMMAND_TYPES.containsKey(pipePart)){
                 System.out.println("Unknown command: " + pipePart);
@@ -40,30 +42,40 @@ public class PipeHandler {
             String[] command = pipePart.split(" ");
             if(command[0].equals("ls")){
                 if(i == pipeParts.length - 1){
+                    //if its the last command we dont need to capture its output
                     LsCommand.execute(command);
                 }
                 else{
                     output = captureOutput(() -> LsCommand.execute(command));
                 }
             }
-            else if(command[0] == "cat"){
+            else if(command[0].equals("cat")){
 //                org.os.CatCommand.execute(command[1]);
                 if(i == pipeParts.length - 1){
-                    org.os.CatCommand.execute(command[1]);
+                    //if last command, no need to store output
+                    CatCommand.execute(command);
                 }
                 else{
-                    output = captureOutput(() -> org.os.CatCommand.execute(command[1]));
-                    in = captureOutput(() -> org.os.CatCommand.execute(command[1]));
+                    //if not the last command, we will store the output
+                    if(i>0){
+                        output = captureOutput(() -> CatCommand.execute(command));
+                    }
+                    else{
+                        output = captureOutput(() -> CatCommand.execute(command));
+                    }
+//                    in = captureOutput(() -> CatCommand.execute(command));
                 }
             }
-            else if(command[0] == "sort"){
+            else if(command[0].equals("sort")){
                 if(i == pipeParts.length - 1){
-                    LsCommand.execute(command);
+                    SortNameCommand.execute(output);
+
                 }
                 else{
-                    String finalIn = in;
-                    output = captureOutput(() -> SortNameCommand.execute(finalIn));
-                    in = captureOutput(() -> SortNameCommand.execute(finalIn));
+//                    String finalIn = in;
+                    String[] finalOutput = output;
+                    output = captureOutput(() -> SortNameCommand.execute(finalOutput));
+//                    in = captureOutput(() -> SortNameCommand.execute(finalIn));
                 }
             }
             i++;
