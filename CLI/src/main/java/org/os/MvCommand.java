@@ -1,81 +1,61 @@
 package org.os;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class MvCommand {
-
     public static void execute(String[] args) {
+        if (args.length < 3) {
+            System.err.println("Usage: mv <source(s)> <destination>");
+            return;
+        }
 
         String[] sources = Arrays.copyOfRange(args, 1, args.length - 1);
         String target = args[args.length - 1];
 
-        Path destination = Paths.get(target);
+        // Convert target to absolute path
+        Path destination = Paths.get(target).toAbsolutePath();
 
-        String currentDir = DirectoryUtil.getCurrentDirectory(); // Get the current directory
-
-
-//        List<Path> expandedSources = new ArrayList<>(); //
-
-
-        try{
-            if(sources.length > 1){
+        try {
+            if (sources.length > 1) {
+                // Multiple source files - destination must be a directory
                 if (!Files.isDirectory(destination)) {
-                    System.err.println("Destination must be an existing directory");
+                    System.err.println("Target must be a directory when moving multiple files");
                     return;
                 }
+
                 for (String source : sources) {
-                    Path src = Paths.get(currentDir, source);
-                    Path dest = destination.resolve(src.getFileName());
-                    Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
+                    Path sourcePath = Paths.get(source).toAbsolutePath();
+                    if (!Files.exists(sourcePath)) {
+                        System.err.println("Source file not found: " + source);
+                        continue;
+                    }
+                    Path targetPath = destination.resolve(sourcePath.getFileName());
+                    Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } else {
+                // Single source file
+                Path sourcePath = Paths.get(sources[0]).toAbsolutePath();
+                if (!Files.exists(sourcePath)) {
+                    System.err.println("Source file not found: " + sources[0]);
+                    return;
+                }
+
+                if (Files.isDirectory(destination)) {
+                    // Moving to directory - preserve filename
+                    Path targetPath = destination.resolve(sourcePath.getFileName());
+                    Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                } else {
+                    // Renaming or moving with new name
+                    Files.move(sourcePath, destination, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
-            else{
-                Path src = Paths.get(currentDir, sources[0]);
-//                if destination is a directory then we are moving
-                if(Files.isDirectory(destination)){
-                    Path dest = destination.resolve(src.getFileName());
-                    Files.move(src, dest, StandardCopyOption.REPLACE_EXISTING);
-                }
-                else{
-//                    if dest is a file then we are renaming
-                    Files.move(src, destination, StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
-        }
-        catch(IOException e){
+        } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
         }
-
-
-
-//        int lastSlash = source.lastIndexOf('/');
-//        String sourceFileName = lastSlash >= -1 ? source.substring(lastSlash + 1) : source ;
-//        String targetFileName = lastSlash >= -1 ? target.substring(lastSlash + 1) : target ;
-//        String sourcePath = lastSlash >= -1 ? source.substring(0, lastSlash) : source ;
-//        String targetPath = lastSlash >= -1 ? target.substring(0, lastSlash) : target ;
-//        if (sourceFileName == null || targetFileName == null) {
-//            System.out.println("Error: source file or target file is null!");
-//            return;
-//        }
-//        if (sourceFileName != targetFileName) {
-//            //rename
-//            return;
-//        }
-//        if (sourceFileName == targetFileName && source != target) {
-//            //move
-//        }
-//        if (sourceFileName!=targetFileName && sourcePath != targetPath){
-//            //move adn rename
-//        }
-
     }
 }
-//wildcard remaining
