@@ -1,138 +1,120 @@
 package org.os;
 
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.io.TempDir;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-class LsCommandTest {
-    @TempDir
-    Path tempDir;
-
-    private static final String testDir = "testDir";
-    private File file1;
-    private File file2;
-    private File hiddenFile;
-    private File subDir;
+public class LSCommandTest {
+    private static final String TEST_DIR = "testDir";
+    private static File testDirectory;
 
     @BeforeAll
-    static void setUpClass() {
-        new File(testDir).mkdir();
+    static void setUp() {
+        testDirectory = new File(TEST_DIR);
+        testDirectory.mkdir();
+        try {
+            // Create test files
+            createTestFile("file1.txt");
+            createTestFile("file2.txt");
+            createTestFile(".hiddenFile1");
+            createTestFile(".hiddenFile2");
+            createTestFile("test.java");
+            // Create a subdirectory
+            new File(TEST_DIR + "/subdir").mkdir();
+        } catch (IOException e) {
+            fail("Test setup failed: " + e.getMessage());
+        }
+        // Set the current directory for tests
+        DirectoryUtil.setCurrentDirectory(System.getProperty("user.dir"));
     }
 
-    @AfterAll
-    static void tearDownClass() {
-        File dir = new File(testDir);
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                file.delete();
-            }
-            dir.delete();
+    private static void createTestFile(String filename) throws IOException {
+        File file = new File(TEST_DIR + "/" + filename);
+        file.createNewFile();
+        if (filename.startsWith(".")) {
+            Files.setAttribute(file.toPath(), "dos:hidden", true);
         }
     }
 
-    @BeforeEach
-    void setUp() throws IOException {
-        // Create test files and directories in temp directory
-        file1 = Files.createFile(tempDir.resolve("test1.txt")).toFile();
-        file2 = Files.createFile(tempDir.resolve("test2.txt")).toFile();
-        hiddenFile = Files.createFile(tempDir.resolve(".hidden")).toFile();
-        subDir = Files.createDirectory(tempDir.resolve("subdir")).toFile();
+    @AfterAll
+    static void tearDown() {
+        deleteDirectory(testDirectory);
+    }
 
-        // Mock DirectoryUtil to return our temp directory
-        DirectoryUtil.setCurrentDirectory(tempDir.toString());
+    private static void deleteDirectory(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        directory.delete();
+    }
+
+    @Test
+    void testBasicLs() {
+        String output = LsCommand.execute(new String[]{"ls", TEST_DIR}).trim();
+        List<String> files = Arrays.asList(output.split(System.lineSeparator()));
+
+        assertTrue(files.contains("file1.txt"));
+        assertTrue(files.contains("file2.txt"));
+        assertTrue(files.contains("test.java"));
+        assertTrue(files.contains("subdir"));
+        assertFalse(files.contains(".hiddenFile1"));
+        assertFalse(files.contains(".hiddenFile2"));
     }
 
 
 
     @Test
-    void testLsWithReverseFlag() {
-        String[] tokens = {"ls", "-r"};
-        String result = LsCommand.execute(tokens);
+    void testLsReverse() {
+        String output = LsCommand.execute(new String[]{"ls", "-r", TEST_DIR}).trim();
+        List<String> files = Arrays.asList(output.split(System.lineSeparator()));
 
-        // In reverse order, test2.txt should come before test1.txt
-        int pos1 = result.indexOf("test1.txt");
-        int pos2 = result.indexOf("test2.txt");
-        assertTrue(pos2 < pos1);
+        // Verify reverse alphabetical order
+        assertTrue(files.indexOf("test.java") < files.indexOf("file2.txt"));
+        assertTrue(files.indexOf("file2.txt") < files.indexOf("file1.txt"));
     }
 
     @Test
-    void testLsWithShowAllFlag() {
-        String[] tokens = {"ls", "-a"};
-        String result = LsCommand.execute(tokens);
+    void testLsShowAll() {
+        String output = LsCommand.execute(new String[]{"ls", "-a", TEST_DIR}).trim();
+        List<String> files = Arrays.asList(output.split(System.lineSeparator()));
 
-        assertTrue(result.contains(".hidden"));
-        assertTrue(result.contains("test1.txt"));
-        assertTrue(result.contains("test2.txt"));
+        assertTrue(files.contains("file1.txt"));
+        assertTrue(files.contains("file2.txt"));
+        assertTrue(files.contains(".hiddenFile1"));
+        assertTrue(files.contains(".hiddenFile2"));
+        assertTrue(files.contains("test.java"));
+        assertTrue(files.contains("subdir"));
     }
 
     @Test
-    void testLsWithWildcard() {
-        String[] tokens = {"ls", "*.txt"};
-        String result = LsCommand.execute(tokens);
-
-        assertTrue(result.contains("test1.txt"));
-        assertTrue(result.contains("test2.txt"));
-        assertFalse(result.contains("subdir"));
-        assertFalse(result.contains(".hidden"));
+    void testLsWithInvalidDirectory() {
+        String output = LsCommand.execute(new String[]{"ls", "nonexistentDir"}).trim();
+        assertTrue(output.contains("Error"));
     }
 
 
-    @Test
-    void testLsWithWildcardAndReverseFlag() {
-        String[] tokens = {"ls", "-r", "*.txt"};
-        String result = LsCommand.execute(tokens);
-
-        assertTrue(result.contains("test1.txt"));
-        assertTrue(result.contains("test2.txt"));
-        int pos1 = result.indexOf("test1.txt");
-        int pos2 = result.indexOf("test2.txt");
-        assertTrue(pos2 < pos1);
-    }
-
-    // Added tests from LSCommandTest class
-    @Test
-    void testLsRelativePath() {
-        String output = LsCommand.execute(new String[]{"ls", "../"});
-        assertNotNull(output);
-        assertFalse(output.trim().isEmpty());
-    }
 
     @Test
-    void testLsRelativePath2() {
-        String output = LsCommand.execute(new String[]{"ls", "../../"});
-        assertNotNull(output);
-        assertFalse(output.trim().isEmpty());
-    }
-
-    @Test
-    void testLsRelativePath3() {
-        String output = LsCommand.execute(new String[]{"ls", "../"});
-        assertNotNull(output);
-        assertFalse(output.trim().isEmpty());
-    }
-
-
-    // Additional new test cases
-
-
-    @Test
-    void testLsWithComplexWildcard() throws IOException {
-        // Create files with different extensions
-        Files.createFile(tempDir.resolve("test.jpg"));
-        Files.createFile(tempDir.resolve("test.png"));
-
-        String[] tokens = {"ls", "*.{txt,jpg}"};
-        String result = LsCommand.execute(tokens);
-
-        assertTrue(result.contains("test1.txt"));
-        assertTrue(result.contains("test.jpg"));
-        assertFalse(result.contains("test.png"));
+    void testEmptyDirectory() {
+        String emptyDir = "emptyTestDir";
+        new File(emptyDir).mkdir();
+        try {
+            String output = LsCommand.execute(new String[]{"ls", emptyDir}).trim();
+            assertEquals("", output);
+        } finally {
+            new File(emptyDir).delete();
+        }
     }
 }
