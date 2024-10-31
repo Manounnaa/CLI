@@ -9,45 +9,41 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class LsCommand {
- // Track current directory
-//    private static String currentDirectory = "."; // Track current directory
-//    String currentDir = DirectoryUtil.getCurrentDirectory(); // Get the current directory
     public static String execute(String[] tokens) {
         String currentDirectory = DirectoryUtil.getCurrentDirectory();
         boolean reverseOrder = tokens.length > 1 && "-r".equals(tokens[1]);
         boolean showAll = tokens.length > 1 && "-a".equals(tokens[1]);
-        String directory = currentDirectory; // Use DirectoryUtil for current directory
+        String directory = currentDirectory;
+        String pattern = "*"; // Default pattern
 
-        Path resolvedPath = Paths.get(currentDirectory).normalize();
-        String pattern = "*";
-        StringBuilder output = new StringBuilder(); // Use StringBuilder to capture output
-
-
-        if (tokens.length > 1 && !reverseOrder && !showAll) {
-            pattern = tokens[1].contains("*") ? tokens[1] : "*";
-            directory = tokens[1].contains("*") ? currentDirectory : tokens[1];
-        } else if (tokens.length > 2) {
-            pattern = tokens[2].contains("*") ? tokens[2] : "*";
-            directory = tokens[2].contains("*") ? currentDirectory : tokens[2];
+        // Handle tokens for path and patterns
+        if (tokens.length > 1) {
+            if (tokens[1].contains("*")) {
+                directory = currentDirectory;
+                pattern = tokens[1];
+            } else {
+                directory = tokens[1];
+                if (tokens.length > 2) {
+                    pattern = tokens[2].contains("*") ? tokens[2] : "*";
+                }
+            }
         }
 
+        Path resolvedPath = Paths.get(directory).normalize();
+        StringBuilder output = new StringBuilder();
+
         if (reverseOrder) {
-            output.append(lsDirectoryReverse(directory, pattern));
+            output.append(lsDirectoryReverse(resolvedPath.toString(), pattern));
         } else if (showAll) {
             output.append(lsShowAll(resolvedPath.toString(), pattern));
         } else {
             output.append(lsDirectory(resolvedPath.toString(), pattern));
         }
         return output.toString().trim();
-
     }
 
-    // Method to change the current directory
-
-
-    public static Object lsDirectory(String dir, String pattern) {
+    public static String lsDirectory(String dir, String pattern) {
         StringBuilder output = new StringBuilder();
-
         Path path = Paths.get(dir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, pattern)) {
             for (Path entry : stream) {
@@ -61,18 +57,17 @@ public class LsCommand {
         return output.toString();
     }
 
-    public static Object lsDirectoryReverse(String dir, String pattern) {
+    public static String lsDirectoryReverse(String dir, String pattern) {
         StringBuilder output = new StringBuilder();
         File directory = new File(dir);
         List<String> fileNames = new ArrayList<>();
 
         if (!directory.exists() || !directory.isDirectory()) {
-            System.out.println("Error: '" + dir + "' is not a valid directory.");
+            output.append("Error: '").append(dir).append("' is not a valid directory.");
             return output.toString();
         }
 
         Pattern regexPattern = Pattern.compile(pattern.replace("*", ".*"));
-
         for (File file : directory.listFiles()) {
             if (!file.isHidden() && regexPattern.matcher(file.getName()).matches()) {
                 fileNames.add(file.getName());
@@ -85,13 +80,12 @@ public class LsCommand {
         return output.toString();
     }
 
-    public static Object lsShowAll(String dir, String pattern) {
+    public static String lsShowAll(String dir, String pattern) {
         StringBuilder output = new StringBuilder();
-
         Path path = Paths.get(dir);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, pattern)) {
             for (Path entry : stream) {
-                output.append(entry.getFileName()).append(System.lineSeparator()); // Show all files, including hidden
+                output.append(entry.getFileName()).append(System.lineSeparator()); // Show all files
             }
         } catch (IOException e) {
             output.append("Error: ").append(e.getMessage());
@@ -99,11 +93,3 @@ public class LsCommand {
         return output.toString();
     }
 }
-//list of things to handle
-//ls
-//ls path
-//ls path1 path2 path3....
-//ls filename
-//ls ../  ...relative path
-//ls *extension  ....wild card
-//ls path/*extension
