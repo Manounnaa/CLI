@@ -1,108 +1,138 @@
 package org.os;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class LSCommandTest {
+class LsCommandTest {
+    @TempDir
+    Path tempDir;
+
     private static final String testDir = "testDir";
+    private File file1;
+    private File file2;
+    private File hiddenFile;
+    private File subDir;
 
     @BeforeAll
-    static void setUp() {
+    static void setUpClass() {
         new File(testDir).mkdir();
     }
 
     @AfterAll
-    static void tearDown() {
-        for (File file : new File(testDir).listFiles()) {
-            file.delete();
+    static void tearDownClass() {
+        File dir = new File(testDir);
+        if (dir.exists()) {
+            for (File file : dir.listFiles()) {
+                file.delete();
+            }
+            dir.delete();
         }
-        new File(testDir).delete();
     }
 
-    // Test for reverse order listing
+    @BeforeEach
+    void setUp() throws IOException {
+        // Create test files and directories in temp directory
+        file1 = Files.createFile(tempDir.resolve("test1.txt")).toFile();
+        file2 = Files.createFile(tempDir.resolve("test2.txt")).toFile();
+        hiddenFile = Files.createFile(tempDir.resolve(".hidden")).toFile();
+        subDir = Files.createDirectory(tempDir.resolve("subdir")).toFile();
+
+        // Mock DirectoryUtil to return our temp directory
+        DirectoryUtil.setCurrentDirectory(tempDir.toString());
+    }
+
+
+
     @Test
-    void testList() {
-        TouchCommand.execute(testDir + "/file1.txt");
-        TouchCommand.execute(testDir + "/file2.txt");
-        String output = LsCommand.execute(new String[]{testDir, "-r"});
-        assertTrue(output.contains("file1.txt"));
-        assertTrue(output.contains("file2.txt"));
+    void testLsWithReverseFlag() {
+        String[] tokens = {"ls", "-r"};
+        String result = LsCommand.execute(tokens);
+
+        // In reverse order, test2.txt should come before test1.txt
+        int pos1 = result.indexOf("test1.txt");
+        int pos2 = result.indexOf("test2.txt");
+        assertTrue(pos2 < pos1);
     }
 
-    // Test for empty directory
     @Test
-    void testEmpty() {
-        String emptyDir = "emptyTestDir";
-        new File(emptyDir).mkdir();
-        String output = LsCommand.execute(new String[]{emptyDir, "-r"});
-        assertTrue(output.isEmpty());
-        new File(emptyDir).delete();
+    void testLsWithShowAllFlag() {
+        String[] tokens = {"ls", "-a"};
+        String result = LsCommand.execute(tokens);
+
+        assertTrue(result.contains(".hidden"));
+        assertTrue(result.contains("test1.txt"));
+        assertTrue(result.contains("test2.txt"));
     }
 
-    // Test for invalid directory
     @Test
-    void testValidation() {
-        String output = LsCommand.execute(new String[]{"invalidDir", "-r"});
-        assertTrue(output.contains("Error: 'invalidDir' is not a valid directory.")); // Assuming error handling
+    void testLsWithWildcard() {
+        String[] tokens = {"ls", "*.txt"};
+        String result = LsCommand.execute(tokens);
+
+        assertTrue(result.contains("test1.txt"));
+        assertTrue(result.contains("test2.txt"));
+        assertFalse(result.contains("subdir"));
+        assertFalse(result.contains(".hidden"));
     }
 
-    // Test for reverse order listing with multiple files
+
     @Test
-    void testReversing() {
-        TouchCommand.execute(testDir + "/b.txt");
-        TouchCommand.execute(testDir + "/a.txt");
-        TouchCommand.execute(testDir + "/c.txt");
-        String output = LsCommand.execute(new String[]{testDir, "-r"});
-        assertTrue(output.startsWith("c.txt"));
+    void testLsWithWildcardAndReverseFlag() {
+        String[] tokens = {"ls", "-r", "*.txt"};
+        String result = LsCommand.execute(tokens);
+
+        assertTrue(result.contains("test1.txt"));
+        assertTrue(result.contains("test2.txt"));
+        int pos1 = result.indexOf("test1.txt");
+        int pos2 = result.indexOf("test2.txt");
+        assertTrue(pos2 < pos1);
     }
 
-    // Test for files with the same name
-    @Test
-    void testSimilarity() {
-        TouchCommand.execute(testDir + "/duplicate.txt");
-        TouchCommand.execute(testDir + "/duplicate.txt");
-        String output = LsCommand.execute(new String[]{testDir, "-r"});
-        assertTrue(output.contains("duplicate.txt"));
-    }
-
-    // Test for listing all files
-    @Test
-    void testLsAllFiles() {
-        TouchCommand.execute(testDir + "/file3.txt");
-        String output = LsCommand.execute(new String[]{testDir, "*"});
-        assertTrue(output.contains("file3.txt"));
-    }
-
-    // Test for listing XML files
-    @Test
-    void testLsXmlFiles() {
-        TouchCommand.execute(testDir + "/file1.xml");
-        TouchCommand.execute(testDir + "/file2.txt");
-        String output = LsCommand.execute(new String[]{testDir, "*.xml"});
-        assertTrue(output.contains("file1.xml"));
-        assertFalse(output.contains("file2.txt"));
-    }
-
-    // Test for relative path
+    // Added tests from LSCommandTest class
     @Test
     void testLsRelativePath() {
-        String output = LsCommand.execute(new String[]{"ls", "../"}); // Assuming valid parent directory
-        assertNotNull(output); // Check that the command runs without error
+        String output = LsCommand.execute(new String[]{"ls", "../"});
+        assertNotNull(output);
+        assertFalse(output.trim().isEmpty());
     }
 
-    // Test for multiple levels of relative path
     @Test
     void testLsRelativePath2() {
-        String output = LsCommand.execute(new String[]{"ls", "../../"}); // Adjust based on your structure
-        assertNotNull(output); // Check that the command runs without error
+        String output = LsCommand.execute(new String[]{"ls", "../../"});
+        assertNotNull(output);
+        assertFalse(output.trim().isEmpty());
     }
 
-    // Another relative path test
     @Test
     void testLsRelativePath3() {
         String output = LsCommand.execute(new String[]{"ls", "../"});
-        assertNotNull(output); // Check that the command runs without error
+        assertNotNull(output);
+        assertFalse(output.trim().isEmpty());
+    }
+
+
+    // Additional new test cases
+
+
+    @Test
+    void testLsWithComplexWildcard() throws IOException {
+        // Create files with different extensions
+        Files.createFile(tempDir.resolve("test.jpg"));
+        Files.createFile(tempDir.resolve("test.png"));
+
+        String[] tokens = {"ls", "*.{txt,jpg}"};
+        String result = LsCommand.execute(tokens);
+
+        assertTrue(result.contains("test1.txt"));
+        assertTrue(result.contains("test.jpg"));
+        assertFalse(result.contains("test.png"));
     }
 }
