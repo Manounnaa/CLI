@@ -14,7 +14,7 @@ public class MvCommand {
 
     public static void execute(String[] args) {
 
-        String[] sources = Arrays.copyOfRange(args, 0, args.length - 1);
+        String[] sources = Arrays.copyOfRange(args, 1, args.length - 1);
         String target = args[args.length - 1];
 
         Path destination = Paths.get(target);
@@ -23,6 +23,7 @@ public class MvCommand {
 
 
 //        List<Path> expandedSources = new ArrayList<>(); //
+
 
         try{
             if(sources.length > 1){
