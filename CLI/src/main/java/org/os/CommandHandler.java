@@ -89,12 +89,13 @@ public class CommandHandler {
 
             case "rm":
                 if (tokens.length > 1) {
-                    RmCommand.execute(tokens);
+                    String[] fileNames = new String[tokens.length - 1];
+                    System.arraycopy(tokens, 1, fileNames, 0, tokens.length - 1); // Get all file names after "rm"
+                    RmCommand.execute(fileNames); // Pass all file names to RmCommand
                 } else {
                     System.out.println("rm: missing operand");
                 }
                 break;
-
             case "touch":
                 if (tokens.length > 1) {
                     String[] fileNames = new String[tokens.length - 1];
