@@ -97,12 +97,13 @@ public class CommandHandler {
 
             case "touch":
                 if (tokens.length > 1) {
-                    TouchCommand.execute(tokens[1]);
+                    String[] fileNames = new String[tokens.length - 1];
+                    System.arraycopy(tokens, 1, fileNames, 0, tokens.length - 1); // Get all file names
+                    TouchCommand.execute(fileNames); // Pass all file names
                 } else {
                     System.out.println("touch: missing operand");
                 }
                 break;
-
             case "cat":
                  output = CatCommand.execute(tokens);
                 // Handle redirection
