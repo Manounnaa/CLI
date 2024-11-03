@@ -45,4 +45,5 @@ public class PipeHandlerTest {
         String output = outputStream.toString().trim();
         assertTrue(output.contains("Empty command"));
     }
+
 }
