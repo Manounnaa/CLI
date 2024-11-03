@@ -19,7 +19,7 @@ public class MkdirCommand {
                 return;
             }
             try {
-                Files.createDirectory(path);
+                Files.createDirectories(path);
             } catch (IOException e) {
                 System.out.println("mkdir: cannot create directory '" + dirName + "': " + e.getMessage());
             }
